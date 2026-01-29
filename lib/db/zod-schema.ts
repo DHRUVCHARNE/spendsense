@@ -33,7 +33,7 @@ export const deleteCategorySchema = z.object({
 });
 export const txnSelectSchema = createSelectSchema(txns);
 export const txnInsertSchema = createInsertSchema(txns, {
-  amountPaise: z.number().int().positive(),
+  amountPaise: z.coerce.number().int().positive(),
 }).omit({
   id: true,
   userId: true,
