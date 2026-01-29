@@ -1,10 +1,11 @@
 "use server";
-import { eq, type InferSelectModel ,and} from "drizzle-orm";
+import { eq, type InferSelectModel ,and, sql} from "drizzle-orm";
 import { auth } from "@/auth";
 import { AppError, BadRequestError, UnauthorizedError } from "@/lib/AppError";
 import { db } from "@/lib/db";
 import { txns } from "@/lib/db/schema";
 import { txnInsertSchema, txnUpdateSchema,txnDeleteSchema } from "@/lib/db/zod-schema";
+import { appInfo } from "@/components/config";
 
 type Txn=InferSelectModel<typeof txns>;
 
@@ -17,6 +18,22 @@ export async function createTxn(input: unknown) : Promise<Txn> {
   //Validate Client input
   const { success, data } = txnInsertSchema.safeParse(input);
   if (!success) throw new BadRequestError("Invalid Txn Insert payload");
+
+    // 🔒 Count user's transactions
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(txns)
+    .where(eq(txns.userId, session.user.id))
+
+  const count = Number(result[0].count)
+
+  if (count >= appInfo.limitsPerUser.txns) {
+    throw new AppError(
+      `Transaction limit reached (${appInfo.limitsPerUser.txns} max). Upgrade plan or delete old ones.`,
+      "TXN_LIMIT_REACHED",
+      400
+    )
+  }
 
   //Insert txn
   const [createdTxn] = await db

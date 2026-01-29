@@ -1,3 +1,4 @@
+
 export const appInfo = {
   title: "SpendSense",
   author: "Dhruv Charne",
@@ -8,4 +9,8 @@ export const appInfo = {
     linkedin: "https://www.linkedin.com/in/dhruv-charne-908848213/",
     portfolio: "https://dhruv4ne-portfolio.vercel.app/",
   },
+  limitsPerUser:{
+    categories:50,
+    txns:500
+  }
 };

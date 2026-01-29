@@ -1,106 +1,64 @@
-import { createTxnAction } from "../actions/actions";
-import { Button } from "@/components/ui/button";
+"use client"
+
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow,
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { useTxns } from "@/lib/txn-service/hooks/useTxns"
 
-export default function AddTxnCard() {
+export default function TxnTable() {
+  const txns = useTxns({ limit: 10 })
+
+  if (txns.status === "pending") return <p>Loading...</p>
+  if (txns.status === "error") return <p>Error: {txns.error.message}</p>
+
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Add Transaction</CardTitle>
-        <CardDescription>Record an income or expense</CardDescription>
-      </CardHeader>
+    <div className="space-y-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Method</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      {/* 🔥 THIS connects form → server action */}
-      <form action={createTxnAction}>
-        <CardContent>
-          <div className="flex flex-col gap-4">
+        <TableBody>
+          {txns.items.map((txn) => (
+            <TableRow key={txn.id}>
+              <TableCell>
+                {new Date(txn.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>{txn.txnType}</TableCell>
+              <TableCell>{txn.paymentMethod}</TableCell>
+              <TableCell className="text-right">
+                ₹ {(txn.amountPaise ).toFixed(2)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-            {/* Amount in Paise */}
-            <div className="grid gap-2">
-              <Label htmlFor="amountPaise">Amount (₹)</Label>
-              <Input
-                id="amountPaise"
-                name="amountPaise"
-                type="number"
-                placeholder="500"
-                required
-              />
-            </div>
+      {/* Pagination Controls */}
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={() => txns.fetchPreviousPage()}
+          disabled={!txns.hasPreviousPage || txns.isFetchingPreviousPage}
+        >
+          {txns.isFetchingPreviousPage ? "Loading..." : "Previous"}
+        </Button>
 
-            {/* Transaction Type */}
-            <div className="grid gap-2">
-              <Label>Transaction Type</Label>
-              <select name="txnType" className="border rounded p-2">
-                <option value="EXPENSE">Expense</option>
-                <option value="INCOME">Income</option>
-              </select>
-            </div>
-
-            {/* Category ID */}
-            <div className="grid gap-2">
-              <Label htmlFor="categoryId">Category ID</Label>
-              <Input
-                id="categoryId"
-                name="categoryId"
-                placeholder="UUID (optional)"
-              />
-            </div>
-
-            {/* Currency */}
-            <div className="grid gap-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
-                name="currency"
-                placeholder="INR"
-              />
-            </div>
-
-            {/* Payment Method */}
-            <div className="grid gap-2">
-              <Label>Payment Method</Label>
-              <select name="paymentMethod" className="border rounded p-2">
-                <option value="">Select (optional)</option>
-                <option value="UPI">UPI</option>
-                <option value="CASH">Cash</option>
-                <option value="CARD">Card</option>
-                <option value="NETBANKING">Net Banking</option>
-                <option value="WALLET">Wallet</option>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-                <option value="CHEQUE">Cheque</option>
-                <option value="EMI">EMI</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-
-            {/* Description */}
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                placeholder="Dinner at cafe"
-              />
-            </div>
-
-          </div>
-        </CardContent>
-
-        <CardFooter>
-          <Button type="submit" className="w-full">
-            Add Transaction
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
-  );
+        <Button
+          variant="outline"
+          onClick={() => txns.fetchNextPage()}
+          disabled={!txns.hasNextPage || txns.isFetchingNextPage}
+        >
+          {txns.isFetchingNextPage ? "Loading..." : "Next"}
+        </Button>
+      </div>
+    </div>
+  )
 }

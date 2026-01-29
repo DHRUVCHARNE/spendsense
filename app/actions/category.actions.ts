@@ -5,7 +5,8 @@ import { BadRequestError, UnauthorizedError,AppError } from "@/lib/AppError";
 import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema"
 import { createCategorySchema, updateCategorySchema,deleteCategorySchema} from "@/lib/db/zod-schema";
-import { InferSelectModel,and,eq } from "drizzle-orm"
+import { InferSelectModel,and,eq, sql } from "drizzle-orm"
+import { appInfo } from "@/components/config";
 
 type Category = InferSelectModel<typeof categories>;
 
@@ -16,6 +17,22 @@ export async function createCategory(input:unknown):Promise<Category>{
     //Validate client input
     const {success,data}=createCategorySchema.safeParse(input);
     if(!success) throw new BadRequestError("Invalid Category Insert Payload");
+
+    // 🔒 Count user's Categories
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(categories)
+    .where(eq(categories.userId, session.user.id))
+
+  const count = Number(result[0].count)
+
+  if (count >= appInfo.limitsPerUser.categories) {
+    throw new AppError(
+      `Category limit reached (${appInfo.limitsPerUser.categories} max). Upgrade plan or delete old ones.`,
+      "CATEGORY_LIMIT_REACHED",
+      400
+    )
+  }
 
     //Insert Category
     const [createdCategory]=await db.insert(categories).values({
@@ -63,3 +80,4 @@ export async function deleteCategory(input:unknown):Promise<Category>{
     
       return deletedCategory;
 }
+

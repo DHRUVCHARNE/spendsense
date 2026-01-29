@@ -3,10 +3,9 @@ import {
   createSelectSchema,
   createUpdateSchema,
 } from "drizzle-zod";
-import { categories, txns, users } from "./schema";
+import { categories, txns } from "./schema";
 import { string, z } from "zod";
 
-export const userSelectSchema = createSelectSchema(users);
 export const categoriesSelectSchema = createSelectSchema(categories);
 export const createCategorySchema = createInsertSchema(categories,{
   name:z.string().min(1),
