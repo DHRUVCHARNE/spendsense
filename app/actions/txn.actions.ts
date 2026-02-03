@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { txns } from "@/lib/db/schema";
 import { txnInsertSchema, txnUpdateSchema,txnDeleteSchema } from "@/lib/db/zod-schema";
 import { appInfo } from "@/components/config";
+import z from "zod";
 
 type Txn=InferSelectModel<typeof txns>;
 
@@ -16,8 +17,8 @@ export async function createTxn(input: unknown) : Promise<Txn> {
     throw new UnauthorizedError();
   }
   //Validate Client input
-  const { success, data } = txnInsertSchema.safeParse(input);
-  if (!success) throw new BadRequestError("Invalid Txn Insert payload");
+  const data = input as z.infer<typeof txnInsertSchema>;
+  
 
     // 🔒 Count user's transactions
   const result = await db
@@ -56,8 +57,7 @@ export async function updateTxn(input:unknown):Promise<Txn>{
     throw new UnauthorizedError();
   }
   //Validate Client input
-  const { success, data } = txnUpdateSchema.safeParse(input);
-  if (!success) throw new BadRequestError("Invalid Txn Update payload");
+  const data = input as z.infer<typeof txnUpdateSchema>;
 
   const {id,data:payload}=data;
   
@@ -83,9 +83,7 @@ export async function deleteTxn(input:unknown):Promise<Txn>{
     throw new UnauthorizedError();
   }
   //Validate Client input
-  const { success, data } = txnDeleteSchema.safeParse(input);
-  if (!success) throw new BadRequestError("Invalid Txn delete payload");
-
+  const data = input as z.infer<typeof txnDeleteSchema>;
   const id=data.id;
   const[deletedTxn]=await db.delete(txns).where(and(eq(txns.userId,session.user.id),eq(txns.id,id))).returning();
 

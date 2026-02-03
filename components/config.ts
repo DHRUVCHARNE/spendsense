@@ -10,7 +10,8 @@ export const appInfo = {
     portfolio: "https://dhruv4ne-portfolio.vercel.app/",
   },
   limitsPerUser:{
-    categories:50,
-    txns:500
+    categories:25,
+    txns:700,
+    amount:5000
   }
 };

@@ -3,7 +3,7 @@ import { txnListInputSchema } from "../txn.pagination.schema";
 import { api } from "@/lib/trpc/client";
 
 type TxnInput = z.infer<typeof txnListInputSchema>;
-type BaseInput = Partial<Omit<TxnInput, "cursor">>;
+export type BaseInput = Partial<Omit<TxnInput, "cursor">>;
 
 export function useTxns(options?: BaseInput) {
   const query = api.txn.list.useInfiniteQuery(

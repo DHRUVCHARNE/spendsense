@@ -7,6 +7,7 @@ import { categories } from "@/lib/db/schema"
 import { createCategorySchema, updateCategorySchema,deleteCategorySchema} from "@/lib/db/zod-schema";
 import { InferSelectModel,and,eq, sql } from "drizzle-orm"
 import { appInfo } from "@/components/config";
+import z from "zod";
 
 type Category = InferSelectModel<typeof categories>;
 
@@ -15,9 +16,8 @@ export async function createCategory(input:unknown):Promise<Category>{
     const session = await auth();
     if(!session?.user?.id) throw new UnauthorizedError();
     //Validate client input
-    const {success,data}=createCategorySchema.safeParse(input);
-    if(!success) throw new BadRequestError("Invalid Category Insert Payload");
-
+    const data=input as z.infer<typeof createCategorySchema>;
+    
     // 🔒 Count user's Categories
   const result = await db
     .select({ count: sql<number>`count(*)` })
@@ -49,9 +49,7 @@ export async function updateCategory(input:unknown):Promise<Category>{
     const session = await auth();
     if(!session?.user?.id) throw new UnauthorizedError();
     //Validate client input
-    const {success,data}=updateCategorySchema.safeParse(input);
-    if(!success) throw new BadRequestError("Invalid Category Insert Payload");
-    //Parse
+    const data = input as z.infer<typeof updateCategorySchema>;
      const {id,data:payload}=data;
     //Update
     const[updatedCategory]=await db.update(categories).set({...payload}).where(and(
@@ -70,9 +68,8 @@ export async function deleteCategory(input:unknown):Promise<Category>{
         throw new UnauthorizedError();
       }
       //Validate Client input
-      const { success, data } = deleteCategorySchema.safeParse(input);
-      if (!success) throw new BadRequestError("Invalid Category delete payload");
-    
+      const data = input as z.infer<typeof deleteCategorySchema>;
+
       const id=data.id;
       const[deletedCategory]=await db.delete(categories).where(and(eq(categories.userId,session.user.id),eq(categories.id,id))).returning();
     

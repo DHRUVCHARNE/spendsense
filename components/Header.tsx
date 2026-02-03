@@ -34,13 +34,13 @@ export default async function Header() {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/dashboard">Dashboard</Link>
+                  <Link href="/categories">Categories</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/transactions">Transactions</Link>
+                  <Link href="/">Transactions</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 

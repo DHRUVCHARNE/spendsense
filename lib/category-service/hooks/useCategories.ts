@@ -1,12 +1,13 @@
 import z from "zod";
 import { categoryListInputSchema } from "../category.pagination.schema";
 import { api } from "@/lib/trpc/client";
+import { appInfo } from "@/components/config";
 
 type TxnInput = z.infer<typeof categoryListInputSchema>;
 type BaseInput = Partial<Omit<TxnInput, "cursor">>;
 
-export function useTxns(options?: BaseInput) {
-  const query = api.txn.list.useInfiniteQuery(
+export function useCategories(options?: BaseInput) {
+  const query = api.category.list.useInfiniteQuery(
     {
       ...options,
     },
