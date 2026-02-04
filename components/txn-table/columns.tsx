@@ -30,15 +30,15 @@ function CategoryHeaderFilter({
         <Field>
             <FieldLabel htmlFor="categoryType">Category Type</FieldLabel>
             <Select
-                value={value ?? ""}
-                onValueChange={(v) => onChange(v || undefined)}
+                value={value ?? "ALL"}
+                onValueChange={(v) => onChange(v === "ALL" ? undefined : v)}
             >
                 <SelectTrigger id="categoryType">
                     <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="ALL">All</SelectItem>
                         {categories.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>
                                 {cat.name}
@@ -66,7 +66,7 @@ export const getTxnColumns = (
                         onValueChange={(v) =>
                             setFilters(f => ({
                                 ...f,
-                                txnType: v ? (v as BaseInput["txnType"]) : undefined,
+                                txnType: v === "ALL" ? undefined : (v as BaseInput["txnType"]),
                             }))
                         }
                     >
@@ -75,7 +75,7 @@ export const getTxnColumns = (
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="">All</SelectItem>
+                                <SelectItem value="ALL">All</SelectItem>
                                 {txnTypeValues.map((type) => (
                                     <SelectItem key={type} value={type}>{type}</SelectItem>
                                 ))}
@@ -179,11 +179,13 @@ export const getTxnColumns = (
                 <Field>
                     <FieldLabel htmlFor="paymentMethod">Method</FieldLabel>
                     <Select
-                        value={filters.paymentMethod ?? ""}
+                        value={filters.paymentMethod ?? "ALL"}
                         onValueChange={(v) =>
                             setFilters(f => ({
                                 ...f,
-                                paymentMethod: v ? (v as BaseInput["paymentMethod"]) : undefined,
+                                paymentMethod: v === "ALL"
+                                    ? undefined
+                                    : (v as BaseInput["paymentMethod"]),
                             }))
                         }
                     >
@@ -192,7 +194,7 @@ export const getTxnColumns = (
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="">All</SelectItem>
+                                <SelectItem value="ALL">All</SelectItem>
                                 {paymentMethodValues.map((m) => (
                                     <SelectItem key={m} value={m}>{m}</SelectItem>
                                 ))}
