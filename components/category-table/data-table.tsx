@@ -2,10 +2,8 @@
 
 import {
   ColumnDef,
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  SortingState,
   useReactTable,
 } from "@tanstack/react-table"
 
@@ -17,30 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import React from "react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data: TData[],
-  sorting:SortingState,
-  setSorting:React.Dispatch<React.SetStateAction<SortingState>>,
-  
+  data: TData[]
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  sorting,
-  setSorting,
-  
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
-    state:{sorting},
-    onSortingChange:setSorting,
-    getCoreRowModel: getCoreRowModel(), // No Native filtering and sorting
-  });
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   return (
     <div className="overflow-hidden rounded-md border">

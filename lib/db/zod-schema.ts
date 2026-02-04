@@ -5,6 +5,7 @@ import {
 } from "drizzle-zod";
 import { categories, txns } from "./schema";
 import { string, z } from "zod";
+import { appInfo } from "@/components/config";
 
 export const categoriesSelectSchema = createSelectSchema(categories);
 export const createCategorySchema = createInsertSchema(categories, {
@@ -32,7 +33,7 @@ export const deleteCategorySchema = z.object({
 });
 export const txnSelectSchema = createSelectSchema(txns);
 export const txnInsertSchema = createInsertSchema(txns, {
-  amountPaise: z.coerce.number().int().positive(),
+  amountPaise: z.coerce.number().int().positive().min(1).max(appInfo.limitsPerUser.amount,{error:`Amount Cannot Exceed ${appInfo.limitsPerUser.amount}`}),
   categoryId: z
     .uuid()
     .optional()
@@ -47,7 +48,7 @@ export const txnInsertSchema = createInsertSchema(txns, {
 export const txnUpdateSchema = z.object({
   id: z.uuid(),
   data: createUpdateSchema(txns, {
-    amountPaise: z.coerce.number().int().positive().optional(),
+    amountPaise: z.coerce.number().int().positive().min(1).max(appInfo.limitsPerUser.amount,{error:`Amount Cannot Exceed ${appInfo.limitsPerUser.amount}`}).optional(),
     categoryId: z
       .uuid()
       .optional()

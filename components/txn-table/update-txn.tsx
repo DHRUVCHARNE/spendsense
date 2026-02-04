@@ -18,12 +18,12 @@ import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
 import { Input } from "../ui/input";
+export const txnTypeValues = txnTypeEnum.enumValues;
+export const paymentMethodValues = paymentMethodEnum.enumValues;
 export default function UpdateTxnForm(options: z.infer<typeof txnUpdateSchema> & {
     open: boolean;
     setOpen: (v: boolean) => void;
 }) {
-    const txnTypeValues = txnTypeEnum.enumValues;
-    const paymentMethodValues = paymentMethodEnum.enumValues;
     const [value, setValue] = useState<[number]>([options.data.
         amountPaise ?? 200]);
     type TxnType = typeof txnTypeValues[number];
@@ -137,7 +137,7 @@ export default function UpdateTxnForm(options: z.infer<typeof txnUpdateSchema> &
                                 </SelectContent>
                             </Select>
                         </Field>
-                        <Field>
+                        <Field className="w-20">
                             <FieldLabel htmlFor="currency">Currency</FieldLabel>
                             <Select
                                 value={currency}

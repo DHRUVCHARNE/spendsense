@@ -125,7 +125,7 @@ export default function CreateTxnForm({
           </Field>
 
           {/* Currency */}
-          <Field>
+          <Field className="w-20">
             <FieldLabel>Currency</FieldLabel>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger><SelectValue /></SelectTrigger>

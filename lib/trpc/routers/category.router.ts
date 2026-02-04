@@ -1,5 +1,5 @@
 import { categoryListInputSchema } from "@/lib/category-service/category.pagination.schema";
-import { createTRPCRouter, protectedProcedure } from "../init";
+import { createTRPCRouter } from "../init";
 import {
   buildCursorWhere,
   categoriesOrderBy,
@@ -8,6 +8,8 @@ import { categories } from "@/lib/db/schema";
 import { db } from "@/lib/db";
 import {z} from "zod";
 import { and, inArray,eq } from "drizzle-orm";
+import { protectedProcedure } from "../procedures";
+
 
 export const categoryRouter = createTRPCRouter({
   list: protectedProcedure

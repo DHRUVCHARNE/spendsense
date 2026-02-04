@@ -3,12 +3,15 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider/theme-provider";
 import { TRPCProvider } from "@/lib/trpc/provider";
 import  Header  from "@/components/Header"; 
-import { auth } from "@/auth";
 import CategoryHydrator from "@/components/category-hydrator";
 import { Toaster } from "@/components/ui/sonner";
+import Footer from "@/components/Footer";
+import { appInfo } from "@/components/config";
+import { cachedAuth } from "@/lib/authUtils";
+
 export const metadata: Metadata = {
-  title: "Expense Tracker App",
-  description: "Created by Dhruv Charne",
+  title: appInfo.title,
+  description:appInfo.description,
 };
 
 export default async function RootLayout({
@@ -16,7 +19,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const session = await cachedAuth();
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -30,13 +33,13 @@ export default async function RootLayout({
             {session?.user?.id && (
               <CategoryHydrator userId={session.user.id} />
             )}
-            <Header />
+            <Header/>
           {children}
           <Toaster richColors position="top-right" />
+          <Footer />
         </ThemeProvider>
       </TRPCProvider>
     </body>
-      
     </html >
   );
 }

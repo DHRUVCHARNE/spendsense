@@ -1,80 +1,97 @@
-"use server"
+"use server";
 
 import { auth } from "@/auth";
-import { BadRequestError, UnauthorizedError,AppError } from "@/lib/AppError";
+import { BadRequestError, UnauthorizedError, AppError } from "@/lib/AppError";
 import { db } from "@/lib/db";
-import { categories } from "@/lib/db/schema"
-import { createCategorySchema, updateCategorySchema,deleteCategorySchema} from "@/lib/db/zod-schema";
-import { InferSelectModel,and,eq, sql } from "drizzle-orm"
+import { categories } from "@/lib/db/schema";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  deleteCategorySchema,
+} from "@/lib/db/zod-schema";
+import { InferSelectModel, and, eq, sql } from "drizzle-orm";
 import { appInfo } from "@/components/config";
 import z from "zod";
+import { Guard } from "./action-helper";
+import { createLimiter, deleteLimiter, updateLimiter } from "@/lib/rate-limit/rate-limit";
 
 type Category = InferSelectModel<typeof categories>;
 
-export async function createCategory(input:unknown):Promise<Category>{
-    //Auth 
-    const session = await auth();
-    if(!session?.user?.id) throw new UnauthorizedError();
-    //Validate client input
-    const data=input as z.infer<typeof createCategorySchema>;
-    
-    // 🔒 Count user's Categories
+export async function createCategory(input: unknown): Promise<Category> {
+  const session = await Guard(createLimiter, {
+    errorMessage:"Too many Requests",
+    requireAuth: true,
+  });
+  const data = input as z.infer<typeof createCategorySchema>;
+
+  // 🔒 Count user's Categories
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(categories)
-    .where(eq(categories.userId, session.user.id))
+    .where(eq(categories.userId, session.user.id));
 
-  const count = Number(result[0].count)
+  const count = Number(result[0].count);
 
   if (count >= appInfo.limitsPerUser.categories) {
     throw new AppError(
       `Category limit reached (${appInfo.limitsPerUser.categories} max). Upgrade plan or delete old ones.`,
       "CATEGORY_LIMIT_REACHED",
-      400
-    )
+      400,
+    );
   }
 
-    //Insert Category
-    const [createdCategory]=await db.insert(categories).values({
-        ...data,userId:session.user.id
-    }).returning();
+  //Insert Category
+  const [createdCategory] = await db
+    .insert(categories)
+    .values({
+      ...data,
+      userId: session.user.id,
+    })
+    .returning();
 
-    if (!createdCategory) throw new AppError("Insert Category Failed", "INSERT_FAILED", 500);
+  if (!createdCategory)
+    throw new AppError("Insert Category Failed", "INSERT_FAILED", 500);
 
-    return createdCategory;
+  return createdCategory;
 }
 
-export async function updateCategory(input:unknown):Promise<Category>{
-    //Auth 
-    const session = await auth();
-    if(!session?.user?.id) throw new UnauthorizedError();
-    //Validate client input
-    const data = input as z.infer<typeof updateCategorySchema>;
-     const {id,data:payload}=data;
-    //Update
-    const[updatedCategory]=await db.update(categories).set({...payload}).where(and(
-        eq(categories.id,id),
-        eq(categories.userId,session.user.id)
-    )).returning();
-    
-    if(!updatedCategory) throw new AppError("Category Update Failed", "UPDATE_FAILED", 500);
+export async function updateCategory(input: unknown): Promise<Category> {
+  const session = await Guard(updateLimiter, {
+    errorMessage: "Too many Requests",
+    requireAuth: true,
+  });
+  //Validate client input
+  const data = input as z.infer<typeof updateCategorySchema>;
+  const { id, data: payload } = data;
+  //Update
+  const [updatedCategory] = await db
+    .update(categories)
+    .set({ ...payload })
+    .where(and(eq(categories.id, id), eq(categories.userId, session.user.id)))
+    .returning();
 
-    return updatedCategory;
+  if (!updatedCategory)
+    throw new AppError("Category Update Failed", "UPDATE_FAILED", 500);
+
+  return updatedCategory;
 }
-export async function deleteCategory(input:unknown):Promise<Category>{
-       //Auth
-      const session = await auth();
-      if (!session?.user?.id) {
-        throw new UnauthorizedError();
-      }
-      //Validate Client input
-      const data = input as z.infer<typeof deleteCategorySchema>;
+export async function deleteCategory(input: unknown): Promise<Category> {
+  //Auth
+  const session = await Guard(deleteLimiter, {
+    errorMessage: "Too many Requests",
+    requireAuth: true,
+  });
+  //Validate Client input
+  const data = input as z.infer<typeof deleteCategorySchema>;
 
-      const id=data.id;
-      const[deletedCategory]=await db.delete(categories).where(and(eq(categories.userId,session.user.id),eq(categories.id,id))).returning();
-    
-      if (!deletedCategory) throw new AppError("Category Delete Failed", "DELETE_FAILED", 500);
-    
-      return deletedCategory;
+  const id = data.id;
+  const [deletedCategory] = await db
+    .delete(categories)
+    .where(and(eq(categories.userId, session.user.id), eq(categories.id, id)))
+    .returning();
+
+  if (!deletedCategory)
+    throw new AppError("Category Delete Failed", "DELETE_FAILED", 500);
+
+  return deletedCategory;
 }
-

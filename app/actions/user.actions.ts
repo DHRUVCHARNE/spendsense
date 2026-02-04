@@ -8,11 +8,14 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { userDeleteSchema } from "@/lib/db/zod-schema";
 import { or, eq } from "drizzle-orm";
+import { Guard } from "./action-helper";
+import { deleteLimiter } from "@/lib/rate-limit/rate-limit";
 //Account Deletion
 export async function deleteUser(input: unknown): Promise<void> {
-  //Auth
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
+  const session = await Guard(deleteLimiter,{
+      errorMessage:"Too many Requests",
+      requireAuth:true
+    });
 
   //Validate Client input
   const { success, data } = userDeleteSchema.safeParse(input);

@@ -7,15 +7,16 @@ import { txns } from "@/lib/db/schema";
 import { txnInsertSchema, txnUpdateSchema,txnDeleteSchema } from "@/lib/db/zod-schema";
 import { appInfo } from "@/components/config";
 import z from "zod";
+import { createLimiter, deleteLimiter, updateLimiter } from "@/lib/rate-limit/rate-limit";
+import { Guard } from "./action-helper";
 
 type Txn=InferSelectModel<typeof txns>;
 
 export async function createTxn(input: unknown) : Promise<Txn> {
-  //Auth
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new UnauthorizedError();
-  }
+  const session = await Guard(createLimiter,{
+      errorMessage:"Too many Requests",
+      requireAuth:true
+    });
   //Validate Client input
   const data = input as z.infer<typeof txnInsertSchema>;
   
@@ -51,11 +52,11 @@ export async function createTxn(input: unknown) : Promise<Txn> {
 }
 
 export async function updateTxn(input:unknown):Promise<Txn>{
-     //Auth
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new UnauthorizedError();
-  }
+  
+  const session = await Guard(updateLimiter,{
+      errorMessage:"Too many Requests",
+      requireAuth:true
+    });
   //Validate Client input
   const data = input as z.infer<typeof txnUpdateSchema>;
 
@@ -77,11 +78,10 @@ export async function updateTxn(input:unknown):Promise<Txn>{
 }
 
 export async function deleteTxn(input:unknown):Promise<Txn>{
-     //Auth
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new UnauthorizedError();
-  }
+  const session = await Guard(deleteLimiter,{
+      errorMessage:"Too many Requests",
+      requireAuth:true
+    });
   //Validate Client input
   const data = input as z.infer<typeof txnDeleteSchema>;
   const id=data.id;

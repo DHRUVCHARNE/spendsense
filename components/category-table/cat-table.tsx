@@ -1,6 +1,6 @@
 "use client"
 import {columns} from "./columns";
-import { DataTable } from "../txn-table/data-table";
+import { DataTable } from "./data-table";
 import { useCategoryStore } from "@/app/store/categories-store";
 
 

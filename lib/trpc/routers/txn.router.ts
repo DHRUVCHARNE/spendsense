@@ -1,10 +1,11 @@
 import { txnListInputSchema } from "@/lib/txn-service/txn.pagination.schema";
-import { createTRPCRouter, protectedProcedure } from "../init";
+import { createTRPCRouter} from "../init";
 import { buildCursorWhere, txnOrderBy } from "@/lib/txn-service/txn.service";
 import { db } from "@/lib/db";
 import { txns } from "@/lib/db/schema";
 import z from "zod";
 import { and, eq, sql, lte, gte,ilike} from "drizzle-orm";
+import { protectedProcedure } from "../procedures";
 
 export const txnRouter = createTRPCRouter({
   list: protectedProcedure
@@ -89,7 +90,8 @@ export const txnRouter = createTRPCRouter({
           ),
         );
     }),
-  monthlyStats: protectedProcedure.query(async ({ ctx }) => {
+  monthlyStats: protectedProcedure
+  .query(async ({ ctx }) => {
     return db.execute(sql`
       SELECT
         date_trunc('month', created_at) as month,

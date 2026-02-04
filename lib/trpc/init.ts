@@ -1,21 +1,24 @@
 import {initTRPC, TRPCError} from "@trpc/server";
 import superjson from "superjson";
-import {cache} from "react";
-import { auth } from "@/auth";
-
-export const createTRPCContext = cache(async()=>{
-    const session=await auth();
+import { headers } from "next/headers";
+export const createTRPCContext = (async()=>{
+    const h = headers();
+    const ip = 
+    (await h).get("x-forwarded-for")?.split(",")[0] ??
+    (await h).get("x-real-ip") ??
+    "unknown";
     return {
-        userId:session?.user?.id ?? null,
+        ip
     };
 });
-
-const t =initTRPC.context<typeof createTRPCContext>().create({
+export type Context = {
+  ip: string;
+  session?:any;
+  
+};
+export const t =initTRPC.context<Context>().create({
     transformer:superjson,
 });
 export const createTRPCRouter=t.router;
-export const protectedProcedure = t.procedure.use(({ctx,next})=>{
-    if(!ctx.userId) throw new TRPCError({code:"UNAUTHORIZED"});
-    return next({ctx:{...ctx,userId:ctx.userId}});
-});
+export const publicProcedure = t.procedure;
 export const createCallerFactory = t.createCallerFactory;
