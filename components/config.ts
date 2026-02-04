@@ -19,7 +19,7 @@ export const appInfo = {
     createAttempts:20, // per minute
     updateAttempts:10,
     deleteAttempts:10,
-    fetchAttempts:30
+    fetchAttempts:60
   },
   
   authProviders: [

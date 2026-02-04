@@ -11,6 +11,7 @@ import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { ClearTxnFiltersButton } from "./clear-filters";
 import { TxnLimitFilter } from "./txn-limit-filter";
 import { ActiveTxnFilterBadges } from "./filter-badges";
+import { ExportTxnsButton } from "./export-txns-button";
 function getVisiblePages(current: number, total: number) {
   const delta = 1 // how many pages around current
   const range: (number | "ellipsis")[] = []
@@ -121,6 +122,7 @@ export default function TxnsPage() {
         <div className="flex flex-wrap gap-4 items-end">
           <TxnLimitFilter value={filters.limit} setFilters={setFilters} />
           <ClearTxnFiltersButton setFilters={setFilters} />
+          <ExportTxnsButton txns={pages.flatMap(p=>p.items)} />
         </div>
 
         <ActiveTxnFilterBadges filters={filters} setFilters={setFilters} />
