@@ -1,15 +1,15 @@
 import LandingPage from "@/components/LandingPage";
 import { TxnHeader } from "@/components/txn-table/txn-header";
 import TxnsPage from "@/components/txn-table/txn-table";
-import { cachedAuth } from "@/lib/authUtils";
 import RateLimitToast from "@/components/RateLimitToast";
+import { auth } from "@/auth";
 export default async function Home({
   searchParams,
 }: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
 
-  const session = await cachedAuth();
+  const session = await auth();
   // ✅ unwrap searchParams
   const params = await searchParams ?? {};
 

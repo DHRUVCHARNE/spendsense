@@ -9,11 +9,11 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { cachedAuth } from "@/lib/authUtils"
 import { ChartNoAxesCombined } from "lucide-react"
+import { auth } from "@/auth"
 
 export default async function Header() {
-  const session = await cachedAuth();
+  const session = await auth();
   const isLoggedIn = !!session
 
   return (

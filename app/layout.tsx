@@ -7,7 +7,7 @@ import CategoryHydrator from "@/components/category-hydrator";
 import { Toaster } from "@/components/ui/sonner";
 import Footer from "@/components/Footer";
 import { appInfo } from "@/components/config";
-import { cachedAuth } from "@/lib/authUtils";
+import { auth } from "@/auth";
 
 export const metadata: Metadata = {
   title: appInfo.title,
@@ -19,7 +19,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await cachedAuth();
+  const session = await auth();
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
