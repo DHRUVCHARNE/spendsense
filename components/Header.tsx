@@ -18,7 +18,7 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-full items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-full items-center justify-between sm:px-4 md:px-6 lg:px-8">
         
         {/* Left — Brand */}
         <Link
@@ -45,8 +45,8 @@ export default async function Header() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/reports">Reports</Link>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <Link href="/reports" className="block w-full">Reports</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
