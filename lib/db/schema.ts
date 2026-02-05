@@ -8,7 +8,6 @@ import {
   timestamp,
   uuid,
   varchar,
-  char,
   primaryKey,
   boolean,
   index,

@@ -5,10 +5,11 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { DropdownMenuContent } from "../ui/dropdown-menu";
 import { SignOut } from "./sign-out";
+import { DeleteAccount } from "./delete-account";
 
 export default async function AuthButton() {
     const session = await auth();
-    if (!session) return <SignIn />;
+    if (!session?.user?.id) return <SignIn />;
     return (
         <div>
             <DropdownMenu>
@@ -29,6 +30,11 @@ export default async function AuthButton() {
                 <DropdownMenuContent className="w-32">
                     <DropdownMenuItem>
                         <SignOut />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                    asChild
+                    >
+                        <DeleteAccount id={session.user?.id} />
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

@@ -1,10 +1,14 @@
 import { txnListInputSchema } from "@/lib/txn-service/txn.pagination.schema";
 import { createTRPCRouter } from "../init";
-import { buildCursorWhere, txnOrderBy } from "@/lib/txn-service/txn.service";
+import {
+  buildCursorWhere,
+  isDefined,
+  txnOrderBy,
+} from "@/lib/txn-service/txn.service";
 import { db } from "@/lib/db";
 import { txns } from "@/lib/db/schema";
 import z from "zod";
-import { and, eq, sql, lte, gte, ilike } from "drizzle-orm";
+import { and, eq, sql, lt, gte, ilike, lte } from "drizzle-orm";
 import { protectedProcedure } from "../procedures";
 function asRows<T>(r: unknown): T[] {
   return r as T[];
@@ -78,45 +82,51 @@ export const txnRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const rows = await db
-        .select({
-          income: sql<number>`sum(case when ${txns.txnType}='INCOME' then ${txns.amountPaise} else 0 end)`,
-          expense: sql<number>`sum(case when ${txns.txnType}='EXPENSE' then ${txns.amountPaise} else 0 end)`,
-        })
-        .from(txns)
-        .where(
-          and(
-            eq(txns.userId, ctx.userId),
-            input.from ? gte(txns.createdAt, input.from) : undefined,
-            input.to ? lte(txns.createdAt, input.to) : undefined,
-          ),
-        );
-      return [
-        {
-          income: Number(rows[0]?.income ?? 0) / 100,
-          expense: Number(rows[0]?.expense ?? 0) / 100,
-        },
-      ];
+      const res = await db.execute(sql`
+    SELECT
+      currency,
+      SUM(amount_paise) FILTER (WHERE txn_type='INCOME') AS income,
+      SUM(amount_paise) FILTER (WHERE txn_type='EXPENSE') AS expense
+    FROM txn
+    WHERE user_id = ${ctx.userId}
+    GROUP BY currency
+  `);
+
+      const rows = asRows<{
+        currency: string;
+        income: number | null;
+        expense: number | null;
+      }>(res);
+
+      return rows.map((r) => ({
+        currency: r.currency,
+        income: Number(r.income ?? 0) / 100,
+        expense: Number(r.expense ?? 0) / 100,
+      }));
     }),
   monthlyStats: protectedProcedure.query(async ({ ctx }) => {
     const res = await db.execute(sql`
-      SELECT
-        date_trunc('month', created_at) as month,
-        SUM(amount_paise) FILTER (WHERE txn_type='EXPENSE') as expenses,
-        SUM(amount_paise) FILTER (WHERE txn_type='INCOME') as income
-      FROM txns
-      WHERE user_id = ${ctx.userId}
-      GROUP BY month
-      ORDER BY month ASC
-    `);
+    SELECT
+      to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+      currency,
+      SUM(amount_paise) FILTER (WHERE txn_type='EXPENSE') AS expenses,
+      SUM(amount_paise) FILTER (WHERE txn_type='INCOME') AS income
+    FROM txn
+    WHERE user_id = ${ctx.userId}
+    GROUP BY date_trunc('month', created_at), currency
+    ORDER BY date_trunc('month', created_at) ASC
+  `);
+
     const rows = asRows<{
-      month: Date;
+      month: string;
+      currency: string;
       expenses: number | null;
       income: number | null;
     }>(res);
 
     return rows.map((r) => ({
-      month: r.month.toISOString().slice(0, 7), // "2025-02" for charts
+      month: r.month,
+      currency: r.currency,
       expenses: Number(r.expenses ?? 0) / 100,
       income: Number(r.income ?? 0) / 100,
     }));
@@ -130,17 +140,17 @@ export const txnRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const res = await db.execute(sql`
-      SELECT c.id, c.name, c.color,
-             SUM(t.amount_paise) as total
-      FROM txns t
-      JOIN categories c ON c.id = t.category_id
-      WHERE t.user_id = ${ctx.userId}
-        AND t.txn_type = 'EXPENSE'
-      GROUP BY c.id
-      ORDER BY total DESC
-    `);
+    SELECT c.name, c.color,
+           SUM(t.amount_paise) AS total
+    FROM txn t
+    JOIN category c ON c.id = t.category_id
+    WHERE t.user_id = ${ctx.userId}
+      AND t.txn_type = 'EXPENSE'
+    GROUP BY c.id
+    ORDER BY total DESC
+  `);
+
       const rows = asRows<{
-        id: string;
         name: string;
         color: string;
         total: number | null;
@@ -154,22 +164,139 @@ export const txnRouter = createTRPCRouter({
     }),
   paymentMethodBreakdown: protectedProcedure.query(async ({ ctx }) => {
     const res = await db.execute(sql`
-    SELECT payment_method, SUM(amount_paise) as total
-    FROM txns
+    SELECT payment_method, SUM(amount_paise) AS total
+    FROM txn
     WHERE user_id = ${ctx.userId}
     GROUP BY payment_method
     ORDER BY total DESC
   `);
+
     const rows = asRows<{
       payment_method: string;
       total: number | null;
     }>(res);
 
-    return rows.map((r, i) => ({
+    return rows.map((r) => ({
       method: r.payment_method,
       total: Number(r.total ?? 0) / 100,
     }));
   }),
+  reportDashboard: protectedProcedure
+    .input(
+      z.object({
+        from: z.date().optional(),
+        to: z.date().optional(),
+        currency: z.string().default("INR"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { from, to, currency } = input;
+      try {
+        const filters = [
+          eq(txns.userId, ctx.userId),
+          eq(txns.currency, currency),
+          from ? gte(txns.createdAt, from) : undefined,
+          to ? lte(txns.createdAt, to) : undefined,
+        ].filter(isDefined); // Removes allvalues undefined
+        const baseWhere = and(...filters);
+        const summaryRes = await db.execute(sql`
+        SELECT
+          SUM(amount_paise) FILTER (WHERE txn_type='INCOME') AS income,
+          SUM(amount_paise) FILTER (WHERE txn_type='EXPENSE') AS expense
+        FROM txn
+        WHERE ${baseWhere}
+      `);
+
+        const dailyRes = await db.execute(sql`
+  SELECT
+    DATE(created_at) as day,
+    SUM(amount_paise) FILTER (WHERE txn_type='INCOME') as income,
+    SUM(amount_paise) FILTER (WHERE txn_type='EXPENSE') as expenses
+  FROM txn
+  WHERE ${baseWhere}
+  GROUP BY DATE(created_at)
+  ORDER BY DATE(created_at)
+`);
+
+        const categoryRes = await db.execute(sql`
+        SELECT c.name, c.color, SUM(txn.amount_paise) AS total
+        FROM txn
+        JOIN category c ON c.id = txn.category_id
+        WHERE ${baseWhere} AND txn.txn_type='EXPENSE'
+        GROUP BY c.id, c.name, c.color
+        ORDER BY total DESC
+      `);
+
+        const paymentRes = await db.execute(sql`
+        SELECT payment_method, SUM(amount_paise) AS total
+        FROM txn
+        WHERE ${baseWhere}
+        GROUP BY payment_method
+        ORDER BY total DESC
+      `);
+
+        const summaryRows = asRows<{
+          income: number | null;
+          expense: number | null;
+        }>(summaryRes);
+        const categoryRows = asRows<{
+          name: string;
+          color: string;
+          total: number | null;
+        }>(categoryRes);
+        const paymentRows = asRows<{
+          payment_method: string;
+          total: number | null;
+        }>(paymentRes);
+        const dailyRows = asRows<{
+          day: string;
+          income: number | null;
+          expenses: number | null;
+        }>(dailyRes);
+
+        let runningBalance = 0;
+
+        const dailyTrend = dailyRows.map((r) => {
+          const income = Number(r.income ?? 0);
+          const expenses = Number(r.expenses ?? 0);
+
+          runningBalance += income - expenses;
+
+          return {
+            date: r.day, // "2026-02-05"
+            income,
+            expenses,
+            balance: runningBalance, // cumulative
+          };
+        });
+        const payload = {
+          summary: {
+            income: Number(summaryRows[0]?.income ?? 0),
+            expense: Number(summaryRows[0]?.expense ?? 0),
+          },
+          trend: dailyTrend,
+          categories: categoryRows.map((r) => ({
+            name: r.name,
+            value: Number(r.total ?? 0),
+            fill: r.color,
+          })),
+          payments: paymentRows.map((r) => ({
+            method: r.payment_method,
+            total: Number(r.total ?? 0),
+          })),
+        };
+        console.log(payload);
+        return payload;
+      } catch (err) {
+        console.error(err);
+        return {
+          summary: { income: 0, expense: 0 },
+          trend: [], 
+          categories: [],
+          payments: [],
+        };
+      }
+    }),
   search: protectedProcedure
     .input(z.object({ q: z.string() }))
     .query(async ({ ctx, input }) => {

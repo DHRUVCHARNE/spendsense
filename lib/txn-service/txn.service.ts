@@ -21,7 +21,7 @@ type cursorClauseParams = {
   cursor:Cursor
 }
 
-function isDefined<T>(v:T | undefined): v is T {
+export function isDefined<T>(v:T | undefined): v is T {
   return v!==undefined;
 }
 

@@ -41,7 +41,7 @@ function CategoryHeaderFilter({
                         <SelectItem value="ALL">All</SelectItem>
                         {categories.map((cat) => (
                             <SelectItem key={cat.id} value={cat.id}>
-                                {cat.name}
+                                {truncateChars(cat.name,12)}
                             </SelectItem>
                         ))}
                     </SelectGroup>

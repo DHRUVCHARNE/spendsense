@@ -137,7 +137,7 @@ export default function UpdateTxnForm(options: z.infer<typeof txnUpdateSchema> &
                                 </SelectContent>
                             </Select>
                         </Field>
-                        <Field className="w-20">
+                        <Field className="w-24">
                             <FieldLabel htmlFor="currency">Currency</FieldLabel>
                             <Select
                                 value={currency}

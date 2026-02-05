@@ -26,7 +26,7 @@ export const appInfo = {
     {
       id: "github",
       label: "GitHub",
-      icon: FaGithub, // ✅ component reference, not <FaGithub />
+      icon: FaGithub, 
       iconColor: "",
     },
     {

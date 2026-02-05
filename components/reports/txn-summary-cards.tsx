@@ -1,20 +1,25 @@
 "use client"
 
-import { api } from "@/lib/trpc/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export function ReportSummaryCards() {
-  const { data } = api.txn.summary.useQuery({})
+type Props = {
+  summary: { income: number; expense: number }
+  currency: string
+}
 
-  const income = (data?.[0]?.income ?? 0) / 100
-  const expense = (data?.[0]?.expense ?? 0) / 100
+export function ReportSummaryCards({ summary, currency }: Props) {
+  const income = summary.income
+  const expense = summary.expense
   const balance = income - expense
+
+  const format = (v: number) =>
+    new Intl.NumberFormat(undefined, { style: "currency", currency }).format(v)
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Card><CardHeader><CardTitle>Total Income</CardTitle></CardHeader><CardContent>₹ {income.toLocaleString()}</CardContent></Card>
-      <Card><CardHeader><CardTitle>Total Expense</CardTitle></CardHeader><CardContent>₹ {expense.toLocaleString()}</CardContent></Card>
-      <Card><CardHeader><CardTitle>Net Balance</CardTitle></CardHeader><CardContent>₹ {balance.toLocaleString()}</CardContent></Card>
+      <Card><CardHeader><CardTitle>Total Income</CardTitle></CardHeader><CardContent>{format(income)}</CardContent></Card>
+      <Card><CardHeader><CardTitle>Total Expense</CardTitle></CardHeader><CardContent>{format(expense)}</CardContent></Card>
+      <Card><CardHeader><CardTitle>Net Balance</CardTitle></CardHeader><CardContent>{format(balance)}</CardContent></Card>
     </div>
   )
 }
