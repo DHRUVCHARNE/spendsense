@@ -13,7 +13,7 @@ import { ReportCategoryPie } from "@/components/reports/txn-category-pie"
 import { ReportSummaryCards } from "@/components/reports/txn-summary-cards"
 import { ReportNetWorthLine } from "@/components/reports/report-networth-line"
 import { ReportPaymentBar } from "@/components/reports/txn-payment-bar"
-
+import { Skeleton } from "../ui/skeleton"
 export function ReportsDashboardClient() {
     const [currency, setCurrency] = useState("INR")
     const [filters, setFilters] = useState<{ from?: Date; to?: Date }>({})
@@ -25,7 +25,53 @@ export function ReportsDashboardClient() {
     })
 
 
-    if (isLoading) return <div className="p-10">Loading reports...</div>
+    if (isLoading) {
+        return (
+            <div className="space-y-8">
+
+                {/* Filters row */}
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-3">
+                    <Skeleton className="h-9 w-56" />
+                    <Skeleton className="h-9 w-36" />
+                </div>
+
+                {/* Summary cards */}
+                <div className="grid gap-6 md:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="rounded-xl border p-6 space-y-4">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-32" />
+                            <Skeleton className="h-3 w-20" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Charts row */}
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="rounded-xl border p-6 space-y-4">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-64 w-full" />
+                    </div>
+                    <div className="rounded-xl border p-6 space-y-4">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-64 w-full" />
+                    </div>
+                </div>
+
+                {/* Full width charts */}
+                <div className="rounded-xl border p-6 space-y-4">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-72 w-full" />
+                </div>
+
+                <div className="rounded-xl border p-6 space-y-4">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-72 w-full" />
+                </div>
+
+            </div>
+        )
+    }
     if (!data) return null
 
     return (
