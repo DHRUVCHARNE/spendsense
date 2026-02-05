@@ -1,9 +1,9 @@
+import { auth } from "@/auth";
 import { CatHeader } from "@/components/category-table/cat-header";
 import CatsPage from "@/components/category-table/cat-table";
 import { redirect } from "next/navigation";
-import { cachedAuth } from "@/lib/authUtils";
 export default async function Home() {
-  const session = await cachedAuth();
+  const session = await auth();
 
   if (!session) {
     redirect("/");
