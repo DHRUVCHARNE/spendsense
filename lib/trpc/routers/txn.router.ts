@@ -8,7 +8,7 @@ import {
 import { db } from "@/lib/db";
 import { txns } from "@/lib/db/schema";
 import z from "zod";
-import { and, eq, sql, lt, gte, ilike, lte } from "drizzle-orm";
+import { and, eq, sql,desc, gte, ilike, lte } from "drizzle-orm";
 import { protectedProcedure } from "../procedures";
 function asRows<T>(r: unknown): T[] {
   return r as T[];
@@ -298,17 +298,22 @@ export const txnRouter = createTRPCRouter({
       }
     }),
   search: protectedProcedure
-    .input(z.object({ q: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return db
-        .select()
-        .from(txns)
-        .where(
-          and(
-            eq(txns.userId, ctx.userId),
-            ilike(txns.description, `%${input.q}%`),
-          ),
+  .input(z.object({ q: z.string().min(1).max(50) }))
+  .query(async ({ ctx, input }) => {
+    const q = input.q.trim()
+
+    if (!q) return []
+
+    return db
+      .select()
+      .from(txns)
+      .where(
+        and(
+          eq(txns.userId, ctx.userId),
+          ilike(txns.description, `%${q}%`)
         )
-        .limit(20);
-    }),
+      )
+      .orderBy(desc(txns.createdAt))
+      .limit(10)
+  })
 });

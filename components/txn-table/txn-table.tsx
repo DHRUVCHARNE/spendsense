@@ -7,11 +7,17 @@ import { useState } from "react";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink, PaginationEllipsis } from "../ui/pagination";
 import { Skeleton } from "../ui/skeleton";
 import type { BaseInput } from "@/lib/txn-service/hooks/useTxns";
-import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import { SortingState } from "@tanstack/react-table";
 import { ClearTxnFiltersButton } from "./clear-filters";
 import { TxnLimitFilter } from "./txn-limit-filter";
 import { ActiveTxnFilterBadges } from "./filter-badges";
 import { ExportTxnsButton } from "./export-txns-button";
+import { TxnSearchBar } from "./txns-search-bar";
+import { Badge } from "../ui/badge";
+import { List, Search } from "lucide-react";
+import { useRef } from "react";
+import { toast } from "sonner";
+
 function getVisiblePages(current: number, total: number) {
   const delta = 1 // how many pages around current
   const range: (number | "ellipsis")[] = []
@@ -40,7 +46,6 @@ function getVisiblePages(current: number, total: number) {
 
 export default function TxnsPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [filters, setFilters] = useState<BaseInput>({
     limit: 10,
     sort: "desc",
@@ -50,6 +55,11 @@ export default function TxnsPage() {
     from: undefined,
     to: undefined,
   });
+  const [searchResults, setSearchResults] = useState<any[] | null>(null)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [clearSearchCounter, setClearSearchCounter] = useState(0);
+  const isSearchMode = searchQuery.length > 0;
+
   const queryParams = useMemo(() => {
     return Object.fromEntries(
       Object.entries(filters).filter(([_, v]) => v !== undefined)
@@ -64,6 +74,47 @@ export default function TxnsPage() {
       })
     }
   }, [sorting])
+  const searchToastId = useRef<string | number | null>(null)
+  useEffect(() => {
+    if (!isSearchMode) {
+      // Exit search mode → dismiss toast
+      if (searchToastId.current) {
+        toast.dismiss(searchToastId.current)
+        searchToastId.current = null
+      }
+      return
+    }
+
+    // If toast already exists → update it
+    if (searchToastId.current) {
+      toast.message(`Showing results for "${searchQuery}"`, {
+        id: searchToastId.current,
+        action: {
+          label: "Back to all",
+          onClick: () => {
+            setSearchQuery("")
+            setSearchResults(null)
+          },
+        },
+      })
+    } else {
+      // Create toast only once
+      searchToastId.current = toast.message(
+        `Showing results for "${searchQuery}"`,
+        {
+          duration: Infinity, // stays until dismissed
+          action: {
+            label: "Back to all",
+            onClick: () => {
+              setSearchQuery("")
+              setSearchResults(null)
+              setClearSearchCounter(c => c+1)
+            },
+          },
+        }
+      )
+    }
+  }, [isSearchMode, searchQuery])
   const {
     data,
     fetchNextPage,
@@ -77,8 +128,9 @@ export default function TxnsPage() {
   } = useTxns(queryParams);
   const [pagesIndex, setPagesIndex] = useState(0);
   const pages = data?.pages ?? [];
-  const currentPage = pages[pagesIndex]?.items ?? [];
-  const visiblePages = getVisiblePages(pagesIndex, pages.length)
+  const visiblePages = getVisiblePages(pagesIndex, pages.length);
+  const paginatedTxns = pages[pagesIndex]?.items ?? []
+  const tableData = isSearchMode ? searchResults ?? [] : paginatedTxns
   async function handleNext() {
     if (pagesIndex < pages.length - 1) {
       setPagesIndex((p) => p + 1);
@@ -99,9 +151,11 @@ export default function TxnsPage() {
     }
   }
   useEffect(() => {
-    setPagesIndex(0);
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [queryParams])
+    if (!isSearchMode) {
+      setPagesIndex(0)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [queryParams, isSearchMode])
   if (isLoading) {
     return (
       <div className="container mx-auto py-10 space-y-3">
@@ -116,23 +170,31 @@ export default function TxnsPage() {
     return <div className="text-red-500">Failed to load transactions.</div>
   }
 
+
   return (
     <>
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex flex-wrap gap-4 items-end">
-          <TxnLimitFilter value={filters.limit} setFilters={setFilters} />
+          <TxnSearchBar onResults={(results, query) => {
+            setSearchResults(results)
+            setSearchQuery(query)
+          }} 
+          clearSignal={clearSearchCounter}
+          />
+          <TxnLimitFilter value={filters.limit} setFilters={setFilters} disabled={isSearchMode} />
           <ClearTxnFiltersButton setFilters={setFilters} />
-          <ExportTxnsButton txns={pages.flatMap(p=>p.items)} />
+          <ExportTxnsButton txns={pages.flatMap(p => p.items)} />
         </div>
 
         <ActiveTxnFilterBadges filters={filters} setFilters={setFilters} />
       </div>
       <div className="container mx-auto py-10">
-        <DataTable columns={getTxnColumns(filters, setFilters)} data={currentPage}
+        <Badge variant={isSearchMode ? "secondary" : "outline"} className="transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4">{isSearchMode ? <Search /> : <List />}</Badge>
+        <DataTable columns={getTxnColumns(filters, setFilters)} data={tableData}
           sorting={sorting}
           setSorting={setSorting}
         />
-        <Pagination>
+        {!isSearchMode && (<Pagination>
           <PaginationContent>
             {/* Previous */}
             <PaginationItem>
@@ -183,7 +245,7 @@ export default function TxnsPage() {
               />
             </PaginationItem>
           </PaginationContent>
-        </Pagination>
+        </Pagination>)}
       </div>
     </>
   )

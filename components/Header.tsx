@@ -2,7 +2,6 @@ import Link from "next/link"
 import { appInfo } from "./config"
 import ToggleTheme from "./theme-provider/toggle-theme"
 import AuthButton from "./auth/auth-button"
-
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -11,6 +10,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cachedAuth } from "@/lib/authUtils"
+import { ChartNoAxesCombined } from "lucide-react"
 
 export default async function Header() {
   const session = await cachedAuth();
@@ -25,7 +25,7 @@ export default async function Header() {
           href="/"
           className="text-xl font-semibold tracking-tight hover:opacity-80 transition-opacity"
         >
-          {appInfo.title}
+          {appInfo.title} <ChartNoAxesCombined />
         </Link>
 
         {/* Center — Navigation (only when logged in) */}

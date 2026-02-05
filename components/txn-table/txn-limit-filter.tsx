@@ -13,16 +13,18 @@ import { BaseInput } from "@/lib/txn-service/hooks/useTxns"
 
 type Props = {
   value?: BaseInput["limit"]
-  setFilters: React.Dispatch<React.SetStateAction<BaseInput>>
+  setFilters: React.Dispatch<React.SetStateAction<BaseInput>>,
+  disabled:boolean
 }
 
 const LIMIT_OPTIONS = [5, 10, 15, 20]
 
-export function TxnLimitFilter({ value, setFilters }: Props) {
+export function TxnLimitFilter({ value, setFilters,disabled }: Props) {
   return (
     <Field className="w-28">
       <FieldLabel htmlFor="limit">Rows</FieldLabel>
       <Select
+      disabled={disabled}
         value={value?.toString() ?? "10"}
         onValueChange={(v) =>{
           const num = Number(v);

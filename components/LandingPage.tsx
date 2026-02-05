@@ -37,7 +37,7 @@ export default function LandingPage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Button size="lg" className="gap-2 px-8">
-              Get Started Free
+              Sign In for Free
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button variant="outline" size="lg" className="px-8 bg-transparent">
@@ -143,16 +143,16 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-primary mb-2">50K+</div>
-              <p className="text-muted-foreground">Active Users</p>
+              <div className="text-4xl font-bold text-primary mb-2">Become an</div>
+              <p className="text-muted-foreground text-4xl">Active User</p>
             </div>
             <div>
-              <div className="text-4xl font-bold text-accent mb-2">$2.5B</div>
-              <p className="text-muted-foreground">Tracked Expenses</p>
+              <div className="text-4xl font-bold text-accent mb-2">Lot of Free</div>
+              <p className="text-muted-foreground text-4xl">Tracked Expenses</p>
             </div>
             <div>
-              <div className="text-4xl font-bold text-secondary mb-2">4.8/5</div>
-              <p className="text-muted-foreground">Average Rating</p>
+              <div className="text-4xl font-bold text-secondary mb-2">You'll</div>
+              <p className="text-muted-foreground  text-4xl">Love It</p>
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function LandingPage() {
           <h2 className="text-4xl font-bold text-foreground mb-6">Start taking control today</h2>
           <p className="text-lg text-muted-foreground mb-8">Join thousands of people who have transformed their financial lives with ExpenseFlow.</p>
           <Button size="lg" className="gap-2 px-8 mb-4">
-            Create Your Free Account
+            Sign In without Password
             <ArrowRight className="w-4 h-4" />
           </Button>
           <p className="text-sm text-muted-foreground">No credit card required. Cancel anytime.</p>

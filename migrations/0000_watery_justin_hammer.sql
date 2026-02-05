@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TYPE "public"."payment_method" AS ENUM('UPI', 'CASH', 'CARD', 'NETBANKING', 'WALLET', 'BANK_TRANSFER', 'CHEQUE', 'EMI', 'OTHER');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('ADMIN', 'USER');--> statement-breakpoint
 CREATE TYPE "public"."txn_type" AS ENUM('EXPENSE', 'INCOME');--> statement-breakpoint
@@ -94,3 +95,9 @@ CREATE INDEX "txn_user_type_idx" ON "txn" USING btree ("user_id","txn_type");-->
 CREATE INDEX "txn_user_payment_idx" ON "txn" USING btree ("user_id","payment_method");--> statement-breakpoint
 CREATE INDEX "txn_user_category_idx" ON "txn" USING btree ("user_id","category_id");--> statement-breakpoint
 CREATE INDEX "verification_token_expires_idx" ON "verificationToken" USING btree ("expires");
+-- Enable trigram extension (safe to run multiple times)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Trigram index for fast ILIKE search on descriptions
+CREATE INDEX IF NOT EXISTS txn_description_trgm_idx
+ON txn USING gin (description gin_trgm_ops);
