@@ -7,7 +7,8 @@
 > **Smart Personal Expense Tracker & Financial Insights Platform**
 
 [![GitHub](https://img.shields.io/badge/GitHub-DHRUVCHARNE%2Fspendsense-blue?logo=github)](https://github.com/DHRUVCHARNE/spendsense)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-spendsense--sepia.vercel.app-success)](https://spendsense-sepia.vercel.app/)
+[![Live](https://img.shields.io/badge/Live%20Demo-spendsense--sepia.vercel.app-success)](https://spendsense-sepia.vercel.app/)
+[![Video Walkthrough](https://img.shields.io/badge/Live%20Demo--youtu.be/X9mYApmYeqs-success)](https://youtu.be/X9mYApmYeqs)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15%2B-black)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](#license)
